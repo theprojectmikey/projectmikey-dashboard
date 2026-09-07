@@ -1,0 +1,549 @@
+# ============================================================================
+# ProjectMikey — Showroom
+#
+# Simulated devices for sales demos. Core Home Assistant template entities
+# backed by helpers, so they behave like real hardware: lights dim and change
+# colour, blinds travel to a position, fans have speeds, the lock locks.
+# Nothing here touches hardware.
+#
+# Self-contained. Delete this one file, restart, and every trace is gone.
+# Real devices are never referenced: switch.smart_switch, the Third Reality
+# plug and media_player.living_room_tv are untouched.
+#
+# Every helper id starts with sr_ so the fake half is always obvious.
+# ============================================================================
+
+input_boolean:
+  sr_living_ceiling: {name: "Ceiling"}
+  sr_living_lamp: {name: "Lamp"}
+  sr_living_floor: {name: "Floor Lamp"}
+  sr_kitchen_undercab: {name: "Under Cabinet"}
+  sr_kitchen_island: {name: "Island"}
+  sr_bed_ceiling: {name: "Bedroom Ceiling"}
+  sr_bed_bedside: {name: "Bedside"}
+  sr_nursery_night: {name: "Night Light"}
+  sr_entry_hall: {name: "Hallway"}
+  sr_living_fan: {name: "Living Fan"}
+  sr_bed_fan: {name: "Bedroom Fan"}
+  sr_kitchen_coffee: {name: "Coffee Maker"}
+  sr_nursery_humid: {name: "Humidifier"}
+  sr_nursery_monitor: {name: "Baby Monitor"}
+  sr_entry_door: {name: "Front Door"}
+  sr_entry_motion: {name: "Entry Motion"}
+  sr_nursery_motion: {name: "Nursery Motion"}
+  sr_kitchen_leak: {name: "Kitchen Leak"}
+  sr_entry_bell: {name: "Doorbell"}
+  sr_front_locked: {name: "Front Door Locked", initial: true}
+  sr_heater: {name: "Heat Call"}
+
+input_number:
+  sr_living_ceiling_lvl: {name: "Ceiling Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_living_lamp_lvl: {name: "Lamp Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_living_lamp_cr: {name: "Lamp cr", min: 0, max: 255, initial: 255, step: 1, mode: box}
+  sr_living_lamp_cg: {name: "Lamp cg", min: 0, max: 255, initial: 176, step: 1, mode: box}
+  sr_living_lamp_cb: {name: "Lamp cb", min: 0, max: 255, initial: 108, step: 1, mode: box}
+  sr_living_floor_lvl: {name: "Floor Lamp Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_kitchen_undercab_lvl: {name: "Under Cabinet Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_kitchen_island_lvl: {name: "Island Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_kitchen_island_cr: {name: "Island cr", min: 0, max: 255, initial: 255, step: 1, mode: box}
+  sr_kitchen_island_cg: {name: "Island cg", min: 0, max: 255, initial: 176, step: 1, mode: box}
+  sr_kitchen_island_cb: {name: "Island cb", min: 0, max: 255, initial: 108, step: 1, mode: box}
+  sr_bed_ceiling_lvl: {name: "Bedroom Ceiling Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_bed_bedside_lvl: {name: "Bedside Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_nursery_night_lvl: {name: "Night Light Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_nursery_night_cr: {name: "Night Light cr", min: 0, max: 255, initial: 255, step: 1, mode: box}
+  sr_nursery_night_cg: {name: "Night Light cg", min: 0, max: 255, initial: 176, step: 1, mode: box}
+  sr_nursery_night_cb: {name: "Night Light cb", min: 0, max: 255, initial: 108, step: 1, mode: box}
+  sr_entry_hall_lvl: {name: "Hallway Level", min: 0, max: 255, initial: 170, step: 1, mode: slider}
+  sr_living_blinds_pos: {name: "Living Blinds Position", min: 0, max: 100, initial: 100, step: 1, mode: slider}
+  sr_bed_blinds_pos: {name: "Bedroom Blinds Position", min: 0, max: 100, initial: 0, step: 1, mode: slider}
+  sr_kitchen_blinds_pos: {name: "Kitchen Blinds Position", min: 0, max: 100, initial: 60, step: 1, mode: slider}
+  sr_living_fan_pct: {name: "Living Fan Speed", min: 0, max: 100, initial: 66, step: 33, mode: slider}
+  sr_bed_fan_pct: {name: "Bedroom Fan Speed", min: 0, max: 100, initial: 66, step: 33, mode: slider}
+  sr_living_temp: {name: "Living Room Temp", min: 50, max: 90, initial: 72, step: 0.5, mode: box}
+  sr_kitchen_temp: {name: "Kitchen Temp", min: 50, max: 90, initial: 73, step: 0.5, mode: box}
+  sr_bed_temp: {name: "Bedroom Temp", min: 50, max: 90, initial: 69, step: 0.5, mode: box}
+  sr_nursery_temp: {name: "Nursery Temp", min: 50, max: 90, initial: 71, step: 0.5, mode: box}
+
+template:
+  - light:
+      - name: "Ceiling"
+        unique_id: sr_living_ceiling
+        state: "{{ is_state('input_boolean.sr_living_ceiling','on') }}"
+        level: "{{ states('input_number.sr_living_ceiling_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_living_ceiling}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_living_ceiling}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_ceiling_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_living_ceiling}
+      - name: "Lamp"
+        unique_id: sr_living_lamp
+        state: "{{ is_state('input_boolean.sr_living_lamp','on') }}"
+        level: "{{ states('input_number.sr_living_lamp_lvl')|int(0) }}"
+        rgb: "{{ (states('input_number.sr_living_lamp_cr')|int(255), states('input_number.sr_living_lamp_cg')|int(255), states('input_number.sr_living_lamp_cb')|int(255)) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_living_lamp}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_living_lamp}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_lamp_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_living_lamp}
+        set_rgb:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_lamp_cr}
+            data: {value: "{{ r }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_lamp_cg}
+            data: {value: "{{ g }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_lamp_cb}
+            data: {value: "{{ b }}"}
+      - name: "Floor Lamp"
+        unique_id: sr_living_floor
+        state: "{{ is_state('input_boolean.sr_living_floor','on') }}"
+        level: "{{ states('input_number.sr_living_floor_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_living_floor}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_living_floor}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_floor_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_living_floor}
+      - name: "Under Cabinet"
+        unique_id: sr_kitchen_undercab
+        state: "{{ is_state('input_boolean.sr_kitchen_undercab','on') }}"
+        level: "{{ states('input_number.sr_kitchen_undercab_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_kitchen_undercab}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_kitchen_undercab}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_kitchen_undercab_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_kitchen_undercab}
+      - name: "Island"
+        unique_id: sr_kitchen_island
+        state: "{{ is_state('input_boolean.sr_kitchen_island','on') }}"
+        level: "{{ states('input_number.sr_kitchen_island_lvl')|int(0) }}"
+        rgb: "{{ (states('input_number.sr_kitchen_island_cr')|int(255), states('input_number.sr_kitchen_island_cg')|int(255), states('input_number.sr_kitchen_island_cb')|int(255)) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_kitchen_island}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_kitchen_island}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_kitchen_island_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_kitchen_island}
+        set_rgb:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_kitchen_island_cr}
+            data: {value: "{{ r }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_kitchen_island_cg}
+            data: {value: "{{ g }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_kitchen_island_cb}
+            data: {value: "{{ b }}"}
+      - name: "Bedroom Ceiling"
+        unique_id: sr_bed_ceiling
+        state: "{{ is_state('input_boolean.sr_bed_ceiling','on') }}"
+        level: "{{ states('input_number.sr_bed_ceiling_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_bed_ceiling}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_bed_ceiling}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_bed_ceiling_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_bed_ceiling}
+      - name: "Bedside"
+        unique_id: sr_bed_bedside
+        state: "{{ is_state('input_boolean.sr_bed_bedside','on') }}"
+        level: "{{ states('input_number.sr_bed_bedside_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_bed_bedside}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_bed_bedside}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_bed_bedside_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_bed_bedside}
+      - name: "Night Light"
+        unique_id: sr_nursery_night
+        state: "{{ is_state('input_boolean.sr_nursery_night','on') }}"
+        level: "{{ states('input_number.sr_nursery_night_lvl')|int(0) }}"
+        rgb: "{{ (states('input_number.sr_nursery_night_cr')|int(255), states('input_number.sr_nursery_night_cg')|int(255), states('input_number.sr_nursery_night_cb')|int(255)) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_nursery_night}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_nursery_night}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_nursery_night_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_nursery_night}
+        set_rgb:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_nursery_night_cr}
+            data: {value: "{{ r }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_nursery_night_cg}
+            data: {value: "{{ g }}"}
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_nursery_night_cb}
+            data: {value: "{{ b }}"}
+      - name: "Hallway"
+        unique_id: sr_entry_hall
+        state: "{{ is_state('input_boolean.sr_entry_hall','on') }}"
+        level: "{{ states('input_number.sr_entry_hall_lvl')|int(0) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_entry_hall}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_entry_hall}
+        set_level:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_entry_hall_lvl}
+            data: {value: "{{ brightness }}"}
+          - action: "input_boolean.turn_{{ 'on' if brightness | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_entry_hall}
+
+  - cover:
+      - name: "Living Blinds"
+        unique_id: sr_living_blinds
+        device_class: blind
+        position: "{{ states('input_number.sr_living_blinds_pos')|int(0) }}"
+        open_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_living_blinds_pos}
+          data: {value: 100}
+        close_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_living_blinds_pos}
+          data: {value: 0}
+        stop_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_living_blinds_pos}
+          data: {value: "{{ states('input_number.sr_living_blinds_pos')|int(0) }}"}
+        set_cover_position:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_living_blinds_pos}
+          data: {value: "{{ position }}"}
+      - name: "Bedroom Blinds"
+        unique_id: sr_bed_blinds
+        device_class: blind
+        position: "{{ states('input_number.sr_bed_blinds_pos')|int(0) }}"
+        open_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_bed_blinds_pos}
+          data: {value: 100}
+        close_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_bed_blinds_pos}
+          data: {value: 0}
+        stop_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_bed_blinds_pos}
+          data: {value: "{{ states('input_number.sr_bed_blinds_pos')|int(0) }}"}
+        set_cover_position:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_bed_blinds_pos}
+          data: {value: "{{ position }}"}
+      - name: "Kitchen Blinds"
+        unique_id: sr_kitchen_blinds
+        device_class: blind
+        position: "{{ states('input_number.sr_kitchen_blinds_pos')|int(0) }}"
+        open_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_kitchen_blinds_pos}
+          data: {value: 100}
+        close_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_kitchen_blinds_pos}
+          data: {value: 0}
+        stop_cover:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_kitchen_blinds_pos}
+          data: {value: "{{ states('input_number.sr_kitchen_blinds_pos')|int(0) }}"}
+        set_cover_position:
+          action: input_number.set_value
+          target: {entity_id: input_number.sr_kitchen_blinds_pos}
+          data: {value: "{{ position }}"}
+
+  - fan:
+      - name: "Living Fan"
+        unique_id: sr_living_fan
+        state: "{{ is_state('input_boolean.sr_living_fan','on') }}"
+        percentage: "{{ states('input_number.sr_living_fan_pct')|int(0) }}"
+        speed_count: 3
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_living_fan}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_living_fan}
+        set_percentage:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_living_fan_pct}
+            data: {value: "{{ percentage }}"}
+          - action: "input_boolean.turn_{{ 'on' if percentage | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_living_fan}
+      - name: "Bedroom Fan"
+        unique_id: sr_bed_fan
+        state: "{{ is_state('input_boolean.sr_bed_fan','on') }}"
+        percentage: "{{ states('input_number.sr_bed_fan_pct')|int(0) }}"
+        speed_count: 3
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_bed_fan}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_bed_fan}
+        set_percentage:
+          - action: input_number.set_value
+            target: {entity_id: input_number.sr_bed_fan_pct}
+            data: {value: "{{ percentage }}"}
+          - action: "input_boolean.turn_{{ 'on' if percentage | int > 0 else 'off' }}"
+            target: {entity_id: input_boolean.sr_bed_fan}
+
+  - switch:
+      - name: "Coffee Maker"
+        unique_id: sr_kitchen_coffee_sw
+        state: "{{ is_state('input_boolean.sr_kitchen_coffee','on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_kitchen_coffee}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_kitchen_coffee}
+      - name: "Humidifier"
+        unique_id: sr_nursery_humid_sw
+        state: "{{ is_state('input_boolean.sr_nursery_humid','on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_nursery_humid}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_nursery_humid}
+      - name: "Baby Monitor"
+        unique_id: sr_nursery_monitor_sw
+        state: "{{ is_state('input_boolean.sr_nursery_monitor','on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_nursery_monitor}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_nursery_monitor}
+      - name: "Showroom Heat Call"
+        unique_id: sr_heater_sw
+        state: "{{ is_state('input_boolean.sr_heater','on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_heater}
+        turn_off:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_heater}
+
+  - lock:
+      - name: "Front Door"
+        unique_id: sr_front_lock
+        state: "{{ 'locked' if is_state('input_boolean.sr_front_locked','on') else 'unlocked' }}"
+        lock:
+          action: input_boolean.turn_on
+          target: {entity_id: input_boolean.sr_front_locked}
+        unlock:
+          action: input_boolean.turn_off
+          target: {entity_id: input_boolean.sr_front_locked}
+
+  - binary_sensor:
+      - name: "Front Door"
+        unique_id: sr_entry_door
+        device_class: door
+        state: "{{ is_state('input_boolean.sr_entry_door','on') }}"
+      - name: "Entry Motion"
+        unique_id: sr_entry_motion
+        device_class: motion
+        state: "{{ is_state('input_boolean.sr_entry_motion','on') }}"
+      - name: "Nursery Motion"
+        unique_id: sr_nursery_motion
+        device_class: motion
+        state: "{{ is_state('input_boolean.sr_nursery_motion','on') }}"
+      - name: "Kitchen Leak"
+        unique_id: sr_kitchen_leak
+        device_class: moisture
+        state: "{{ is_state('input_boolean.sr_kitchen_leak','on') }}"
+      - name: "Doorbell"
+        unique_id: sr_entry_bell
+        device_class: occupancy
+        state: "{{ is_state('input_boolean.sr_entry_bell','on') }}"
+
+  - sensor:
+      - name: "Living Room Temperature"
+        unique_id: sr_living_temp
+        state: "{{ states('input_number.sr_living_temp')|float(72) | round(1) }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Kitchen Temperature"
+        unique_id: sr_kitchen_temp
+        state: "{{ states('input_number.sr_kitchen_temp')|float(73) | round(1) }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Bedroom Temperature"
+        unique_id: sr_bed_temp
+        state: "{{ states('input_number.sr_bed_temp')|float(69) | round(1) }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Nursery Temperature"
+        unique_id: sr_nursery_temp
+        state: "{{ states('input_number.sr_nursery_temp')|float(71) | round(1) }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Living Room Humidity"
+        unique_id: sr_living_hum
+        state: "43"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+      - name: "Kitchen Humidity"
+        unique_id: sr_kitchen_hum
+        state: "47"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+      - name: "Bedroom Humidity"
+        unique_id: sr_bed_hum
+        state: "41"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+      - name: "Nursery Humidity"
+        unique_id: sr_nursery_hum
+        state: "45"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+
+climate:
+  - platform: generic_thermostat
+    name: Thermostat
+    unique_id: sr_thermostat
+    heater: switch.showroom_heat_call
+    target_sensor: sensor.living_room_temperature
+    min_temp: 55
+    max_temp: 85
+    target_temp: 71
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    initial_hvac_mode: heat
+    precision: 0.5
+
+scene:
+  - name: Good Morning
+    id: sr_sc_morning
+    icon: mdi:weather-sunset-up
+    entities:
+      light.ceiling: {state: on, brightness: 220}
+      light.lamp: {state: off}
+      light.floor_lamp: {state: off}
+      light.under_cabinet: {state: on, brightness: 200}
+      light.island: {state: off}
+      light.bedroom_ceiling: {state: on, brightness: 150}
+      light.bedside: {state: off}
+      light.night_light: {state: off}
+      light.hallway: {state: on, brightness: 200}
+      cover.living_blinds: {state: open, current_position: 100}
+      cover.bedroom_blinds: {state: open, current_position: 100}
+      cover.kitchen_blinds: {state: open, current_position: 100}
+      lock.front_door: locked
+  - name: Movie Night
+    id: sr_sc_movie
+    icon: mdi:movie-open
+    entities:
+      light.ceiling: {state: off}
+      light.lamp: {state: on, brightness: 60}
+      light.floor_lamp: {state: off}
+      light.under_cabinet: {state: off}
+      light.island: {state: off}
+      light.bedroom_ceiling: {state: off}
+      light.bedside: {state: off}
+      light.night_light: {state: off}
+      light.hallway: {state: on, brightness: 40}
+      cover.living_blinds: {state: closed, current_position: 0}
+      cover.bedroom_blinds: {state: closed, current_position: 0}
+      cover.kitchen_blinds: {state: closed, current_position: 0}
+      lock.front_door: locked
+  - name: Goodnight
+    id: sr_sc_night
+    icon: mdi:weather-night
+    entities:
+      light.ceiling: {state: off}
+      light.lamp: {state: off}
+      light.floor_lamp: {state: off}
+      light.under_cabinet: {state: off}
+      light.island: {state: off}
+      light.bedroom_ceiling: {state: off}
+      light.bedside: {state: on, brightness: 40}
+      light.night_light: {state: on, brightness: 45}
+      light.hallway: {state: off}
+      cover.living_blinds: {state: closed, current_position: 0}
+      cover.bedroom_blinds: {state: closed, current_position: 0}
+      cover.kitchen_blinds: {state: closed, current_position: 0}
+      lock.front_door: locked
+  - name: Away
+    id: sr_sc_away
+    icon: mdi:home-export-outline
+    entities:
+      light.ceiling: {state: off}
+      light.lamp: {state: off}
+      light.floor_lamp: {state: off}
+      light.under_cabinet: {state: off}
+      light.island: {state: off}
+      light.bedroom_ceiling: {state: off}
+      light.bedside: {state: off}
+      light.night_light: {state: off}
+      light.hallway: {state: off}
+      cover.living_blinds: {state: closed, current_position: 0}
+      cover.bedroom_blinds: {state: closed, current_position: 0}
+      cover.kitchen_blinds: {state: closed, current_position: 0}
+      lock.front_door: locked

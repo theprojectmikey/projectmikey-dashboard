@@ -1,0 +1,74 @@
+# ProjectMikey dashboard — paste into the Raw configuration editor.
+#
+# Replace every entity ID below with the customer's real ones.
+# The card picks the icon, accent colour and status line itself.
+#
+# Delete the kiosk_mode block if you are not using kiosk-mode,
+# and read docs/INSTALL.md step 7 before you keep it.
+
+kiosk_mode:
+  hide_header: true
+  hide_sidebar: true
+
+views:
+  - type: panel
+    title: Home
+    path: home
+    cards:
+      - type: custom:pm-home
+        palette: glass-cool      # glass-mono | glass-cool | glass-warm | glass-clay
+        theme: sun               # sun | light | dark | omit to follow the device
+        pages:
+
+          - name: Home
+            sections:
+              - title: Scenes
+                items:
+                  - scene.good_morning
+                  - scene.movie_night
+                  - scene.goodnight
+                  - scene.away
+              - title: Favourites
+                items:
+                  - climate.thermostat
+                  - lock.front_door
+                  - light.ceiling
+                  - cover.living_blinds
+
+          - name: Living Room
+            sections:
+              - items:
+                  - light.ceiling
+                  - light.lamp
+                  - light.floor_lamp
+                  - cover.living_blinds
+                  - fan.living_fan
+                  - media_player.living_room_tv
+              - title: Sensors
+                items:
+                  - sensor.living_room_temperature
+                  - sensor.living_room_humidity
+
+          - name: Kitchen
+            sections:
+              - items:
+                  - light.under_cabinet
+                  - light.island
+                  - switch.coffee_maker
+                  - cover.kitchen_blinds
+
+          - name: Bedroom
+            sections:
+              - items:
+                  - light.bedroom_ceiling
+                  - light.bedside
+                  - cover.bedroom_blinds
+                  - fan.bedroom_fan
+
+          - name: Entry
+            sections:
+              - items:
+                  - lock.front_door
+                  - light.hallway
+                  - binary_sensor.front_door
+                  - binary_sensor.doorbell
